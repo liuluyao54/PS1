@@ -1,0 +1,180 @@
+---
+title: "Analysis of Toronto Data"
+author: "Luyao Liu"
+date: 2020-09-25
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+This paper makes analysis on Toronto Neighbourhoods Crime Rates data from 2014 to 2019. By split population to two kinds of size, we find there exists positive relationship between population size and average crime rate. In addition, the plots show Assault is the most frequent crime while Homicide occurs the least frequent. Finally, we discuss the future work and the limitations for this paper.
+
+
+# Introduction
+
+## Data
+
+Toronto Neighbourhoods Crime Rates data includes 2014-2019 Crime Data by Neighbourhood. Counts are available for six knids of crime behavours, which are Assault, Auto Theft, Break and Enter, Robbery, Theft Over and Homicide. Data also includes the averages crime rates per 100,000 people by neighbourhood name in Toronto based on Census Population. We would like to mainly make an analysis on the population size of neighbourhood and the different kinds of crime rates. 
+
+## Outline
+
+In this paper, I will introduce the dataset firstly, then try to analysis the data with some relevant graphs. Finally, I will conclude my findings and discuss the future work and weaknesses.
+
+
+# Analysis and Findings
+
+## Statistical summary of data
+
+After taking a look at the data in general, there are 140 neighbourhoods with 62 variables. Except the name and number of the neighbourhoods, almost all the variables are numerical, which include the records of different crime behaviours from 2014 to 2019 as well as the average numbers. In addition, there is an important variable called "Population" which gives us several useful hints for analyzing the data. In this paper, the analysis focus on the different average crime rates and population. The simple summary for these variables are:
+
+\begin{tabular}{rrrrrrrrrr}
+\hline & Population & Assault & Auto Theft & Break and Enter & Robbery & Theft Over & Homicide \\
+\hline Mean & 19511 & 132.65 & 27.84 & 51.55 & 25.65 & 5.20 & 0.30\\
+Median & 16750 & 96.50 & 18.80 & 40.75 & 20.10 & 8.08 & 0.51\\
+\hline
+\end{tabular}
+
+```{r}
+# install.packages("opendatatoronto")
+```
+
+```{r}
+library('opendatatoronto')
+# Download the data
+data = search_packages("Neighbourhood Crime Rates") %>%
+    list_package_resources()%>%
+    get_resource()
+# dim(data) (140, 62)
+# summary(data)
+```
+
+## Analysis Procedures and Findings
+
+From the mean and median of "Population", we can split it to two parts: set as 1 if the population is larger than 20,000, otherwise set as 0. Then, we compare the density and mean of crime rates under different population size. For example, the following two plots are the comparisons for Auto_theft and Theft_over. From these two plots, we can find the crime rates are higher in the larger neighbourhood, or the neighbourhood with larger population.
+
+
+
+```{r}
+# median and mean for population
+# median(data$Population)
+# mean(data$Population)
+# split population size to two groups
+data$popu_size <- ifelse(data$Population>20000, 'large', "small")
+```
+
+```{r}
+# install.packages('plyr')
+library(plyr)
+library(ggplot2)
+means = ddply(data, "popu_size", summarise, rating.mean = mean(AutoTheft_AVG))
+# means (43.54, 17.68)
+ggplot(data = data) +
+  geom_density(mapping = aes(x = AutoTheft_AVG)) +
+  facet_wrap(~popu_size) +
+  geom_vline(data = means, aes(xintercept = rating.mean, colour = popu_size),
+             linetype = "longdash", size=1) +
+  xlab("AutoTheft_AVG count") +
+  ylab("Density") +
+  ggtitle("AutoTheft_AVG by Population") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+means2 <- ddply(data, "popu_size", summarise, rating.mean2 = mean(TheftOver_AVG))
+# means2
+ggplot(data = data) +
+  geom_density(mapping = aes(x = TheftOver_AVG)) +
+  facet_wrap(~popu_size) +
+  geom_vline(data = means2, aes(xintercept = rating.mean2, colour = popu_size),
+             linetype = "longdash", size=1) +
+  xlab("TheftOver_AVG count") +
+  ylab("Density") +
+  ggtitle("TheftOver_AVG by Population") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+To find out more generalized results, I calculate the mean of different crime behaviours under both large population and small population shown as below:
+
+\begin{tabular}{rrrrrrrrrr}
+\hline & Population Size & Assault & Auto Theft & Break and Enter &  Homicide & Robbery & Theft Over \\
+\hline Large mean & 214.86 & 43.54 & 76.81 & 0.73 & 40.85 & 13.36\\
+Small mean & 79.45 & 17.68 & 35.20 & 0.37 & 15.81 & 4.67\\
+\hline
+\end{tabular}
+
+
+Then, put them into one graph as the following. Here, our findings are: 
+
+(1) Assault is the most frequent crime while Homicide occurs the least frequent;  
+(2) All kinds of crime have higher frequency in larger population; 
+(3) Auto_Theft almost has the same counts with Robbery. 
+
+
+
+```{r}
+# side to side barplot
+meanset = aggregate(data[, 12:57], list(data$popu_size), mean)
+class = c(rep('Assault', 2), rep('AutoTheft',2), rep('BreakEnter', 2), rep('Homicide',2), rep('Robbery',2),  rep('TheftOver',2))
+condition = rep(c("large", "small"), 2)
+mean_large = c(214.86, 43.54, 76.81, 0.73, 40.85, 13.36)
+mean_small = c(79.45, 17.68, 35.20, 0.37, 15.81, 4.67)
+mean_all = c(214.86, 79.45, 43.54, 17.68, 76.81, 35.20, 0.73, 0.37, 40.85, 15.81, 13.36, 4.67)
+data2 = data.frame(class,condition,mean_all)
+# Grouped bar plot
+ggplot(data2, aes(fill=condition, y=mean_all, x=class)) + 
+    ggtitle("Different Crime Rates by Population Size") +
+    geom_bar(position="dodge", stat="identity")
+```
+
+Finally, I check the mean of crime rates(the average frequency of these 6 kinds of crime behaviours) for every neighbourhood, and then draw the scatter plot of population and mean crime rate for each neighbourhood in the same plot. In addition, by fitting a straight line with these scatter points, we can find out the linear relationship between the population and mean crime rate. 
+
+```{r}
+# lm population and avg crime rates
+# install.packages("dplyr")
+library('dplyr')
+data3 = data.frame(data)
+avg_rate = rowMeans(data3 %>% select(ends_with("AVG")))
+# first we need to set up our plot
+ggplot(data = data3, aes(x = avg_rate, 
+                                 y = Population, 
+                                 label = Neighbourhood)) + #make sure to add the label aes!
+    geom_point() + # then add a layer of points
+    ggtitle("Linear Relationship between Average Crime Rates and Population Size") +
+    geom_smooth(method = "lm") + # and then add a fitted line
+    geom_text() # and then add labels to the points
+```
+
+
+From the plot above, we can conclude: 
+
+(1) Most of the neighbourhoods have average crime rates under 100 per year, but Waterfront Communication has the most crime rates which is above 200 per year. In addition, the popular areas such as Church-Young and Bay-Street also have high crime rates. Police force needs to be strengthened in these places. 
+
+(2) Generally speaking, population and average crime rates have positive relationship, which means the neighbourhood with more people is more likely to occur crime behaviours.
+
+(3) As for some popular areas, such as Church-Young and Bay-Street, the crime rates are high even though the population is not that large. Criminals usually like to commit crimes in prosperous areas because of the higher crime success rate. 
+
+
+# Discussion
+
+## Limitation and Future Work
+
+(1) In this paper, we mainly make analysis of the average crime rate and population size, which is not enough. There are some other variables may also useful and meaningful for analysis, such as shape area and shape length. We can make analysis on these variables to find out more interesting results. 
+
+(2) There are the crime rate variables in many different years, it is possible to do a time series analysis in the future work. It may be possible to predict the future's crime rate by time series analysis.
+
+
+# References
+
+- Stephenson, Laura B; Harell, Allison; Rubenson, Daniel; Loewen, Peter John, 2020, '2019 Canadian Election Study - Online Survey', https://doi.org/10.7910/DVN/DUS88V, Harvard Dataverse, V1
+- Paul A. Hodgetts and Rohan Alexander (2020). cesR: Access the CES Datasets a Little Easier.. R package version 0.1.0.
+- H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
+- Hadley Wickham, Romain François, Lionel Henry and Kirill Müller (2020). dplyr: A Grammar of Data
+  Manipulation. R package version 1.0.2. https://CRAN.R-project.org/package=dplyr

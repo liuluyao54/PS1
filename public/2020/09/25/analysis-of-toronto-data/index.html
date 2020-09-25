@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.75.1" />
+
+
+<title>Analysis of Toronto Data - 304 Assignment</title>
+<meta property="og:title" content="Analysis of Toronto Data - 304 Assignment">
+
+
+  <link href='../../../../favicon.ico' rel='icon' type='image/x-icon'/>
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="../../../../css/fonts.css" media="all">
+<link rel="stylesheet" href="../../../../css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="../../../../" class="nav-logo">
+    <img src="../../../../images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="../../../../about/">About Me</a></li>
+    
+    <li><a href="https://github.com/liuluyao54">GitHub</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">6 min read</span>
+    
+
+    <h1 class="article-title">Analysis of Toronto Data</h1>
+
+    
+    <span class="article-date">2020-09-25</span>
+    
+
+    <div class="article-content">
+      
+
+
+<div id="abstract" class="section level1">
+<h1>Abstract</h1>
+<p>This paper makes analysis on Toronto Neighbourhoods Crime Rates data from 2014 to 2019. By split population to two kinds of size, we find there exists positive relationship between population size and average crime rate. In addition, the plots show Assault is the most frequent crime while Homicide occurs the least frequent. Finally, we discuss the future work and the limitations for this paper.</p>
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>Toronto Neighbourhoods Crime Rates data includes 2014-2019 Crime Data by Neighbourhood. Counts are available for six knids of crime behavours, which are Assault, Auto Theft, Break and Enter, Robbery, Theft Over and Homicide. Data also includes the averages crime rates per 100,000 people by neighbourhood name in Toronto based on Census Population. We would like to mainly make an analysis on the population size of neighbourhood and the different kinds of crime rates.</p>
+</div>
+<div id="outline" class="section level2">
+<h2>Outline</h2>
+<p>In this paper, I will introduce the dataset firstly, then try to analysis the data with some relevant graphs. Finally, I will conclude my findings and discuss the future work and weaknesses.</p>
+</div>
+</div>
+<div id="analysis-and-findings" class="section level1">
+<h1>Analysis and Findings</h1>
+<div id="statistical-summary-of-data" class="section level2">
+<h2>Statistical summary of data</h2>
+<p>After taking a look at the data in general, there are 140 neighbourhoods with 62 variables. Except the name and number of the neighbourhoods, almost all the variables are numerical, which include the records of different crime behaviours from 2014 to 2019 as well as the average numbers. In addition, there is an important variable called “Population” which gives us several useful hints for analyzing the data. In this paper, the analysis focus on the different average crime rates and population. The simple summary for these variables are:</p>
+
+<pre class="r"><code># install.packages(&quot;opendatatoronto&quot;)</code></pre>
+<pre class="r"><code>library(&#39;opendatatoronto&#39;)
+# Download the data
+data = search_packages(&quot;Neighbourhood Crime Rates&quot;) %&gt;%
+    list_package_resources()%&gt;%
+    get_resource()
+# dim(data) (140, 62)
+# summary(data)</code></pre>
+</div>
+<div id="analysis-procedures-and-findings" class="section level2">
+<h2>Analysis Procedures and Findings</h2>
+<p>From the mean and median of “Population”, we can split it to two parts: set as 1 if the population is larger than 20,000, otherwise set as 0. Then, we compare the density and mean of crime rates under different population size. For example, the following two plots are the comparisons for Auto_theft and Theft_over. From these two plots, we can find the crime rates are higher in the larger neighbourhood, or the neighbourhood with larger population.</p>
+<pre class="r"><code># median and mean for population
+# median(data$Population)
+# mean(data$Population)
+# split population size to two groups
+data$popu_size &lt;- ifelse(data$Population&gt;20000, &#39;large&#39;, &quot;small&quot;)</code></pre>
+<pre class="r"><code># install.packages(&#39;plyr&#39;)
+library(plyr)
+library(ggplot2)
+means = ddply(data, &quot;popu_size&quot;, summarise, rating.mean = mean(AutoTheft_AVG))
+# means (43.54, 17.68)
+ggplot(data = data) +
+  geom_density(mapping = aes(x = AutoTheft_AVG)) +
+  facet_wrap(~popu_size) +
+  geom_vline(data = means, aes(xintercept = rating.mean, colour = popu_size),
+             linetype = &quot;longdash&quot;, size=1) +
+  xlab(&quot;AutoTheft_AVG count&quot;) +
+  ylab(&quot;Density&quot;) +
+  ggtitle(&quot;AutoTheft_AVG by Population&quot;) +
+  theme(plot.title = element_text(hjust = 0.5))</code></pre>
+<p><img src="../../../../post/2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>means2 &lt;- ddply(data, &quot;popu_size&quot;, summarise, rating.mean2 = mean(TheftOver_AVG))
+# means2
+ggplot(data = data) +
+  geom_density(mapping = aes(x = TheftOver_AVG)) +
+  facet_wrap(~popu_size) +
+  geom_vline(data = means2, aes(xintercept = rating.mean2, colour = popu_size),
+             linetype = &quot;longdash&quot;, size=1) +
+  xlab(&quot;TheftOver_AVG count&quot;) +
+  ylab(&quot;Density&quot;) +
+  ggtitle(&quot;TheftOver_AVG by Population&quot;) +
+  theme(plot.title = element_text(hjust = 0.5))</code></pre>
+<p><img src="../../../../post/2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>To find out more generalized results, I calculate the mean of different crime behaviours under both large population and small population shown as below:</p>
+
+<p>Then, put them into one graph as the following. Here, our findings are:</p>
+<ol style="list-style-type: decimal">
+<li>Assault is the most frequent crime while Homicide occurs the least frequent;<br />
+</li>
+<li>All kinds of crime have higher frequency in larger population;</li>
+<li>Auto_Theft almost has the same counts with Robbery.</li>
+</ol>
+<pre class="r"><code># side to side barplot
+meanset = aggregate(data[, 12:57], list(data$popu_size), mean)
+class = c(rep(&#39;Assault&#39;, 2), rep(&#39;AutoTheft&#39;,2), rep(&#39;BreakEnter&#39;, 2), rep(&#39;Homicide&#39;,2), rep(&#39;Robbery&#39;,2),  rep(&#39;TheftOver&#39;,2))
+condition = rep(c(&quot;large&quot;, &quot;small&quot;), 2)
+mean_large = c(214.86, 43.54, 76.81, 0.73, 40.85, 13.36)
+mean_small = c(79.45, 17.68, 35.20, 0.37, 15.81, 4.67)
+mean_all = c(214.86, 79.45, 43.54, 17.68, 76.81, 35.20, 0.73, 0.37, 40.85, 15.81, 13.36, 4.67)
+data2 = data.frame(class,condition,mean_all)
+# Grouped bar plot
+ggplot(data2, aes(fill=condition, y=mean_all, x=class)) + 
+    ggtitle(&quot;Different Crime Rates by Population Size&quot;) +
+    geom_bar(position=&quot;dodge&quot;, stat=&quot;identity&quot;)</code></pre>
+<p><img src="../../../../post/2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Finally, I check the mean of crime rates(the average frequency of these 6 kinds of crime behaviours) for every neighbourhood, and then draw the scatter plot of population and mean crime rate for each neighbourhood in the same plot. In addition, by fitting a straight line with these scatter points, we can find out the linear relationship between the population and mean crime rate.</p>
+<pre class="r"><code># lm population and avg crime rates
+# install.packages(&quot;dplyr&quot;)
+library(&#39;dplyr&#39;)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:plyr&#39;:
+## 
+##     arrange, count, desc, failwith, id, mutate, rename, summarise,
+##     summarize</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>data3 = data.frame(data)
+avg_rate = rowMeans(data3 %&gt;% select(ends_with(&quot;AVG&quot;)))
+# first we need to set up our plot
+ggplot(data = data3, aes(x = avg_rate, 
+                                 y = Population, 
+                                 label = Neighbourhood)) + #make sure to add the label aes!
+    geom_point() + # then add a layer of points
+    ggtitle(&quot;Linear Relationship between Average Crime Rates and Population Size&quot;) +
+    geom_smooth(method = &quot;lm&quot;) + # and then add a fitted line
+    geom_text() # and then add labels to the points</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="../../../../post/2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>From the plot above, we can conclude:</p>
+<ol style="list-style-type: decimal">
+<li><p>Most of the neighbourhoods have average crime rates under 100 per year, but Waterfront Communication has the most crime rates which is above 200 per year. In addition, the popular areas such as Church-Young and Bay-Street also have high crime rates. Police force needs to be strengthened in these places.</p></li>
+<li><p>Generally speaking, population and average crime rates have positive relationship, which means the neighbourhood with more people is more likely to occur crime behaviours.</p></li>
+<li><p>As for some popular areas, such as Church-Young and Bay-Street, the crime rates are high even though the population is not that large. Criminals usually like to commit crimes in prosperous areas because of the higher crime success rate.</p></li>
+</ol>
+</div>
+</div>
+<div id="discussion" class="section level1">
+<h1>Discussion</h1>
+<div id="limitation-and-future-work" class="section level2">
+<h2>Limitation and Future Work</h2>
+<ol style="list-style-type: decimal">
+<li><p>In this paper, we mainly make analysis of the average crime rate and population size, which is not enough. There are some other variables may also useful and meaningful for analysis, such as shape area and shape length. We can make analysis on these variables to find out more interesting results.</p></li>
+<li><p>There are the crime rate variables in many different years, it is possible to do a time series analysis in the future work. It may be possible to predict the future’s crime rate by time series analysis.</p></li>
+</ol>
+</div>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+<ul>
+<li>Stephenson, Laura B; Harell, Allison; Rubenson, Daniel; Loewen, Peter John, 2020, ‘2019 Canadian Election Study - Online Survey’, <a href="https://doi.org/10.7910/DVN/DUS88V" class="uri">https://doi.org/10.7910/DVN/DUS88V</a>, Harvard Dataverse, V1</li>
+<li>Paul A. Hodgetts and Rohan Alexander (2020). cesR: Access the CES Datasets a Little Easier.. R package version 0.1.0.</li>
+<li>H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.</li>
+<li>Hadley Wickham, Romain François, Lionel Henry and Kirill Müller (2020). dplyr: A Grammar of Data
+Manipulation. R package version 1.0.2. <a href="https://CRAN.R-project.org/package=dplyr" class="uri">https://CRAN.R-project.org/package=dplyr</a></li>
+</ul>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="../../../../index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="../../../../images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="../../../../js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

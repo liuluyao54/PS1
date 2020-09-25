@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>304 Assignment</title>
+    <link>/</link>
+    <description>Recent content on 304 Assignment</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Analysis of Toronto Data</title>
+      <link>/2020/09/25/analysis-of-toronto-data/</link>
+      <pubDate>Fri, 25 Sep 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/2020/09/25/analysis-of-toronto-data/</guid>
+      <description>Abstract This paper makes analysis on Toronto Neighbourhoods Crime Rates data from 2014 to 2019. By split population to two kinds of size, we find there exists positive relationship between population size and average crime rate. In addition, the plots show Assault is the most frequent crime while Homicide occurs the least frequent. Finally, we discuss the future work and the limitations for this paper.
+ Introduction Data Toronto Neighbourhoods Crime Rates data includes 2014-2019 Crime Data by Neighbourhood.</description>
+    </item>
+    
+    <item>
+      <title>About</title>
+      <link>/about/</link>
+      <pubDate>Thu, 05 May 2016 21:48:51 -0700</pubDate>
+      
+      <guid>/about/</guid>
+      <description>This is Liulu Yao. An undergraduate student in UT.</description>
+    </item>
+    
+  </channel>
+</rss>
