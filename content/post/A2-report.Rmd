@@ -1,7 +1,7 @@
 ---
 title: "Survey Report"
 author: "Luyao Liu"
-date: "10/4/2020"
+date: 2020-10-04
 output:
   pdf_document: default
   html_document:
@@ -9,6 +9,9 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(ggmap) # for theme_nothing
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -77,6 +80,61 @@ which means sum the sample values in every stratum and then divided by the overa
 
 From Stats Canada, we can find out the percentages of each age group in Ontario. The percentages for age groups (0-19, 20-29, 30-39, 40-49, 50-59, 60-69, above 69) are (0.125, 0.135, 0.165, 0.150, 0.140, 0.145, 0.140). We then use Stratified Sampling by these weights to sample the data.
 
+```{r, fig.width = 5, fig.height = 4, fig.align = "center", out.width = "70%", echo = FALSE}
+set.seed(123)
+gender = rep(c("Female", "Male", "Other", "Refuse to answer"), c(490, 490, 10, 10))
+age_try = rep(c("0-19", "20-29"," 30-39", "40-49", "50-59", "60-69", "above 69"), c(125, 135, 165, 150, 140, 145, 140))
+age = sample(age_try)
+population = rnorm(10000, mean = 63500, sd = 12100)
+income_data = sample(population, size = 1000)
+# group data
+income = rep(0, 1000)
+for (i in c(1:1000))
+  if ( income_data[i] < 24999) {
+    income[i] = "0-$24,999"
+  } else if ( income_data[i] > 25000 & income_data[i] < 49999) {
+    income[i] = "$25,000-$49,999"
+  } else if ( income_data[i] > 50000 & income_data[i] < 74999) {
+    income[i] = "$50,000-$74,999"
+  } else if ( income_data[i] > 75000 & income_data[i] < 99999) {
+    income[i] = "$75,000-$99,999"
+  } else if ( income_data[i] > 100000 & income_data[i] < 149999) {
+    income[i] = "$100,000-$149,999"
+  } else {
+    income[i] = "above $150,000"
+  }
+edu_try = rep(c("Less than HS", "High School", "College", "Bachelor", "Graduate"), c(55, 155, 355, 330, 105))
+edu = sample(edu_try)
+occup_try = rep(c("Students", "Work for Company", "Self-employment", "Others"), c(245, 325, 280, 150))
+occup = sample(occup_try)
+hazard_popu = rep(c(1:10), 1000)
+hazard_try = sample(hazard_popu, size = 1000)
+# group data
+hazard = rep(0, 1000)
+for (i in c(1:1000))
+  if ( hazard_try[i] == 1) {
+    hazard[i] = "Refuse"
+  } else if ( hazard_try[i] > 1 & hazard_try[i] < 6) {
+    hazard[i] = "No"
+  } else {
+    hazard[i] = "Yes"
+  }
+restart_popu = rep(c(1:10), 1000)
+restart_try = sample(restart_popu, size = 1000)
+# group data
+restart = rep(0, 1000)
+for (i in c(1:1000))
+  if ( restart_try[i] < 4) {
+  restart[i] = "No"
+  } else if ( restart_try[i] > 3 & restart_try[i] < 8) {
+  restart[i] = "Yes but only some parts"
+  } else {
+  restart[i] = "Yes and everywhere"
+  }
+table(restart)
+# Grouped bar plot
+data <- data.frame("Gender" = gender, "Age" = age, "Income" = income, "Education" = edu, "Occupation" = occup, "Hazard" = hazard, "Restart" = restart)
+```
 
 # 3. Results
 
@@ -93,12 +151,59 @@ This survey collects data from 1000 valid respondents. Since the survey form can
 
 (2) Since we split samples' age to 7 groups, pie chart can have a better visualazition patter. The Pie Charts with percentages for Age groups under different opinions to Restart are shown below. From the plots, we can find the respondents who aged between 30 to 39 years old say "No" to restart mostly frenquent. In general, people who are 40 to 59 years old prefer to restart Ontario. This may because they have heavier financial burden so that they need to go back to their work position to make money for family. 
 
-![Restart Opinion (No) for Different Age Levels](age-no.png){#id .class width=70% height=70%}
+* Restart Opinion (No) for Different Age Levels
 
-![Restart Opinion (Yes But Parts) for Different Age Levels](age-yesbut.png){#id .class width=70% height=70%}
+    ```{r, fig.width = 5, fig.height = 4, fig.align = "center", out.width = "70%", echo = FALSE}
+    df1 = data.frame(value = c(39, 47, 49, 39, 39, 43, 32),
+                     Group = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")) %>%
+      # factor levels need to be the opposite order of the cumulative sum of the values
+      mutate(Group = factor(Group, levels = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")),
+             cumulative = cumsum(value),
+             midpoint = cumulative - value / 2,
+             label = paste0(Group, " ", round(value / sum(value) * 100, 1), "%"))
+    
+    ggplot(df1, aes(x = 1, weight = value, fill = Group)) +
+      geom_bar(width = 1, position = "stack") +
+      coord_polar(theta = "y") +
+      geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
+      ggtitle("Restart Opinion (No) for Different Age Levels")
+    ```
+    
+* Restart Opinion (Yes But Parts) for Different Age Levels
 
-![Restart Opinion (Yes and everywhere) for Different Age Levels](age-yes.png){#id .class width=70% height=70%}
+    ```{r, fig.width = 5, fig.height = 4, fig.align = "center", out.width = "70%", echo = FALSE}
+    df2 = data.frame(value = c(51, 55, 61, 70, 50, 60, 53),
+                     Group = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")) %>%
+      # factor levels need to be the opposite order of the cumulative sum of the values
+      mutate(Group = factor(Group, levels = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")),
+             cumulative = cumsum(value),
+             midpoint = cumulative - value / 2,
+             label = paste0(Group, " ", round(value / sum(value) * 100, 1), "%"))
+    
+    ggplot(df2, aes(x = 1, weight = value, fill = Group)) +
+      geom_bar(width = 1, position = "stack") +
+      coord_polar(theta = "y") +
+      geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
+      ggtitle("Restart Opinion (Yes but only some parts) for Different Age Levels")
+    ```
+    
+* Restart Opinion (Yes and everywhere) for Different Age Levels
 
+    ```{r, fig.width = 5, fig.height = 4, fig.align = "center", out.width = "70%", echo = FALSE}
+    df3 = data.frame(value = c(35, 33, 55, 41, 51, 42, 55),
+                     Group = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")) %>%
+      # factor levels need to be the opposite order of the cumulative sum of the values
+      mutate(Group = factor(Group, levels = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")),
+             cumulative = cumsum(value),
+             midpoint = cumulative - value / 2,
+             label = paste0(Group, " ", round(value / sum(value) * 100, 1), "%"))
+    
+    ggplot(df3, aes(x = 1, weight = value, fill = Group)) +
+      geom_bar(width = 1, position = "stack") +
+      coord_polar(theta = "y") +
+      geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
+      ggtitle("Restart Opinion (Yes and everywhere) for Different Age Levels")
+    ```
 
 (3) As for Income, Education and Occupation, the graphs with different levels in terms of the opinion of restarting are shown as following. From these graphs, we can find: 
 
@@ -110,15 +215,41 @@ This survey collects data from 1000 valid respondents. Since the survey form can
 
 - Students prefer to restarting since they need education and social events on campus and some self-employment also agree to restart so that they can make money.
 
-
-
-![Restart Opinions for Different Income Levels](income.png){#id .class width=70% height=70%}
-
-![Restart Opinions for Different Education Levels](edu.png){#id .class width=70% height=70%}
-
-
-![Restart Opinions for Different Occupations](occup.png){#id .class width=70% height=70%}
-
+  * Restart Opinions for Different Income Levels
+    
+    ```{r, fig.width = 5, fig.height = 4, fig.align = "center", out.width = "70%", echo = FALSE}
+    ggplot(data, 
+           aes(x = restart, 
+               fill = income)) + 
+      geom_bar(position = "dodge") + 
+      xlab("Restart Opinions") +
+      ylab("Counts") +
+      ggtitle("Restart Opinions for Different Income Levels")
+    ```
+    
+  * Restart Opinions for Different Education Levels
+  
+    ```{r, fig.width = 5, fig.height = 4, fig.align = "center", out.width = "70%", echo = FALSE}
+    ggplot(data, 
+           aes(x = restart, 
+               fill = edu)) + 
+      geom_bar(position = "dodge") + 
+      xlab("Restart Opinions") +
+      ylab("Counts") +
+      ggtitle("Restart Opinions for Different Education Levels")
+    ```
+    
+  * Restart Opinions for Different Occupations
+  
+    ```{r, fig.width = 5, fig.height = 4, fig.align = "center", out.width = "70%", echo = FALSE}
+    ggplot(data, 
+           aes(x = restart, 
+               fill = occup)) + 
+      geom_bar(position = "dodge") + 
+      xlab("Restart Opinions") +
+      ylab("Counts") +
+      ggtitle("Restart Opinions for Different Occupations")
+    ```
 
 
 # 4. Discussion
