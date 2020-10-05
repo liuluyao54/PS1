@@ -1,6 +1,6 @@
 ---
 title: "A Survey on Whether Ontario's Economy Should be Restarted"
-author: "Luyao Liu, Qi Cai"
+author: "Luyao Liu, Qi Cai, Jialu Xu"
 date: 2020-10-04
 bibliography: A2.bib
 fontsize: 12pt
