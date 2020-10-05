@@ -60,7 +60,7 @@
 
   <article class="article">
     
-    <span class="article-duration">8 min read</span>
+    <span class="article-duration">7 min read</span>
     
 
     <h1 class="article-title">Survey Simulation</h1>
@@ -226,20 +226,10 @@ head(data)</code></pre>
 ##   No                          48   31    44    42    44    43       46
 ##   Yes and everywhere          45   45    42    41    41    44       47
 ##   Yes but only some parts     72   49    49    67    55    58       47</code></pre>
-<pre class="r"><code>library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;dplyr&#39;</code></pre>
-<pre><code>## The following objects are masked from &#39;package:stats&#39;:
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from &#39;package:base&#39;:
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(ggplot2)
-library(ggmap) # for theme_nothing</code></pre>
-<pre><code>## Google&#39;s Terms of Service: https://cloud.google.com/maps-platform/terms/.</code></pre>
-<pre><code>## Please cite ggmap if you use it! See citation(&quot;ggmap&quot;) for details.</code></pre>
-<pre class="r"><code># install.packages(&quot;ggmap&quot;)
+<pre class="r"><code>library(dplyr)
+library(ggplot2)
+library(ggmap) # for theme_nothing
+# install.packages(&quot;ggmap&quot;)
 par(mfrow=c(1,3))
 df1 = data.frame(value = c(39, 47, 49, 39, 39, 43, 32),
                  Group = c( &quot;0-19&quot;, &quot;20-29&quot;, &quot;30-39&quot;, &quot;40-49&quot;, &quot;50-59&quot;, &quot;60-69&quot;, &quot;above 69&quot;)) %&gt;%
@@ -253,9 +243,9 @@ ggplot(df1, aes(x = 1, weight = value, fill = Group)) +
    geom_bar(width = 1, position = &quot;stack&quot;) +
    coord_polar(theta = &quot;y&quot;) +
    geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
-   ggtitle(&quot;Restart Opinion (No) for Different Age Levels&quot;)</code></pre>
-<p><img src="/post/A2-simulation-code_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
-<pre class="r"><code>df2 = data.frame(value = c(51, 55, 61, 70, 50, 60, 53),
+   ggtitle(&quot;Restart Opinion (No) for Different Age Levels&quot;)
+
+df2 = data.frame(value = c(51, 55, 61, 70, 50, 60, 53),
                  Group = c( &quot;0-19&quot;, &quot;20-29&quot;, &quot;30-39&quot;, &quot;40-49&quot;, &quot;50-59&quot;, &quot;60-69&quot;, &quot;above 69&quot;)) %&gt;%
    # factor levels need to be the opposite order of the cumulative sum of the values
    mutate(Group = factor(Group, levels = c( &quot;0-19&quot;, &quot;20-29&quot;, &quot;30-39&quot;, &quot;40-49&quot;, &quot;50-59&quot;, &quot;60-69&quot;, &quot;above 69&quot;)),
@@ -267,9 +257,10 @@ ggplot(df2, aes(x = 1, weight = value, fill = Group)) +
    geom_bar(width = 1, position = &quot;stack&quot;) +
    coord_polar(theta = &quot;y&quot;) +
    geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
-   ggtitle(&quot;Restart Opinion (Yes but only some parts) for Different Age Levels&quot;)</code></pre>
-<p><img src="/post/A2-simulation-code_files/figure-html/unnamed-chunk-12-2.png" width="672" /></p>
-<pre class="r"><code>df3 = data.frame(value = c(35, 33, 55, 41, 51, 42, 55),
+   ggtitle(&quot;Restart Opinion (Yes but only some parts) for Different Age Levels&quot;)
+
+   
+df3 = data.frame(value = c(35, 33, 55, 41, 51, 42, 55),
                  Group = c( &quot;0-19&quot;, &quot;20-29&quot;, &quot;30-39&quot;, &quot;40-49&quot;, &quot;50-59&quot;, &quot;60-69&quot;, &quot;above 69&quot;)) %&gt;%
    # factor levels need to be the opposite order of the cumulative sum of the values
    mutate(Group = factor(Group, levels = c( &quot;0-19&quot;, &quot;20-29&quot;, &quot;30-39&quot;, &quot;40-49&quot;, &quot;50-59&quot;, &quot;60-69&quot;, &quot;above 69&quot;)),
@@ -282,7 +273,6 @@ ggplot(df3, aes(x = 1, weight = value, fill = Group)) +
    coord_polar(theta = &quot;y&quot;) +
    geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
    ggtitle(&quot;Restart Opinion (Yes and everywhere) for Different Age Levels&quot;)</code></pre>
-<p><img src="/post/A2-simulation-code_files/figure-html/unnamed-chunk-12-3.png" width="672" /></p>
 <pre class="r"><code># Grouped bar plot
 ggplot(data, 
        aes(x = restart, 
@@ -290,24 +280,23 @@ ggplot(data,
   geom_bar(position = &quot;dodge&quot;) + 
   xlab(&quot;Restart Opinions&quot;) +
   ylab(&quot;Counts&quot;) +
-  ggtitle(&quot;Restart Opinions for Different Income Levels&quot;)</code></pre>
-<p><img src="/post/A2-simulation-code_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
-<pre class="r"><code>ggplot(data, 
+  ggtitle(&quot;Restart Opinions for Different Income Levels&quot;)
+
+ggplot(data, 
        aes(x = restart, 
            fill = edu)) + 
   geom_bar(position = &quot;dodge&quot;) + 
   xlab(&quot;Restart Opinions&quot;) +
   ylab(&quot;Counts&quot;) +
-  ggtitle(&quot;Restart Opinions for Different Education Levels&quot;)</code></pre>
-<p><img src="/post/A2-simulation-code_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
-<pre class="r"><code>ggplot(data, 
+  ggtitle(&quot;Restart Opinions for Different Education Levels&quot;)
+
+ggplot(data, 
        aes(x = restart, 
            fill = occup)) + 
   geom_bar(position = &quot;dodge&quot;) + 
   xlab(&quot;Restart Opinions&quot;) +
   ylab(&quot;Counts&quot;) +
   ggtitle(&quot;Restart Opinions for Different Occupations&quot;)</code></pre>
-<p><img src="/post/A2-simulation-code_files/figure-html/unnamed-chunk-13-3.png" width="672" /></p>
 </div>
 
     </div>

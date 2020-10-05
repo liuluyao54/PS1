@@ -260,7 +260,13 @@ This survey collects data from 1000 valid respondents. Since the survey form can
 
 2. We make analysis among the collected data and try to find out the opinions among different groups of people. Since all of our variables are categorical, so it is not proper to do estimation. In the future, we can expend the questionnaire and add some quantitative question to make estimation.
 
+# Appendix
 
+* Github repo: https://github.com/liuluyao54/STA304
+
+  All my work can be accessed in 'content/post/'
+
+* The online survey: https://form.jotform.com/202761869971469
 
 # References
 
