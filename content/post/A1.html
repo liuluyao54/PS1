@@ -62,7 +62,7 @@ ggplot(data = data) +
   ylab(&quot;Density&quot;) +
   ggtitle(&quot;AutoTheft_AVG by Population&quot;) +
   theme(plot.title = element_text(hjust = 0.5))</code></pre>
-<p><img src="/post/2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="/post/A1_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <pre class="r"><code>means2 &lt;- ddply(data, &quot;popu_size&quot;, summarise, rating.mean2 = mean(TheftOver_AVG))
 # means2
 ggplot(data = data) +
@@ -74,7 +74,7 @@ ggplot(data = data) +
   ylab(&quot;Density&quot;) +
   ggtitle(&quot;TheftOver_AVG by Population&quot;) +
   theme(plot.title = element_text(hjust = 0.5))</code></pre>
-<p><img src="/post/2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="/post/A1_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>To find out more generalized results, I calculate the mean of different crime behaviours under both large population and small population shown as below:</p>
 
 <p>Then, put them into one graph as the following. Here, our findings are:</p>
@@ -96,7 +96,7 @@ data2 = data.frame(class,condition,mean_all)
 ggplot(data2, aes(fill=condition, y=mean_all, x=class)) + 
     ggtitle(&quot;Different Crime Rates by Population Size&quot;) +
     geom_bar(position=&quot;dodge&quot;, stat=&quot;identity&quot;)</code></pre>
-<p><img src="/post/2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="/post/A1_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <p>Finally, I check the mean of crime rates(the average frequency of these 6 kinds of crime behaviours) for every neighbourhood, and then draw the scatter plot of population and mean crime rate for each neighbourhood in the same plot. In addition, by fitting a straight line with these scatter points, we can find out the linear relationship between the population and mean crime rate.</p>
 <pre class="r"><code># lm population and avg crime rates
 # install.packages(&quot;dplyr&quot;)
@@ -124,7 +124,7 @@ ggplot(data = data3, aes(x = avg_rate,
     geom_smooth(method = &quot;lm&quot;) + # and then add a fitted line
     geom_text() # and then add labels to the points</code></pre>
 <pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
-<p><img src="/post/2015-07-23-r-rmarkdown_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="/post/A1_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p>From the plot above, we can conclude:</p>
 <ol style="list-style-type: decimal">
 <li><p>Most of the neighbourhoods have average crime rates under 100 per year, but Waterfront Communication has the most crime rates which is above 200 per year. In addition, the popular areas such as Church-Young and Bay-Street also have high crime rates. Police force needs to be strengthened in these places.</p></li>

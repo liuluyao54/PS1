@@ -1,0 +1,249 @@
+---
+title: "Survey Simulation"
+author: "Luyao Liu"
+date: "10/3/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# 1. Simulate Data
+
+### (1) Gender
+
+Give the percentages of Female, Male, Other and 'Refuse to answer' as (0.49, 0.49, 0.01, 0.01). Simluate 1000 respondents using this set of weights.
+
+(https://www.statista.com/statistics/446025/births-in-canada-by-gender/)
+
+```{r}
+gender = rep(c("Female", "Male", "Other", "Refuse to answer"), c(490, 490, 10, 10))
+head(gender)
+```
+
+### (2) Age
+
+(https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000501)
+
+From Stats Canada, we can find out the percentages of each age group in Ontario. The percentages for age groups (0-19, 20-29, 30-39, 40-49, 50-59, 60-69, above 69) are (0.125, 0.135, 0.165, 0.150, 0.140, 0.145, 0.140). We then use Stratified Sampling by these weights to simulate the data and then randomize their orders. 
+
+```{r}
+set.seed(123)
+age_try = rep(c("0-19", "20-29"," 30-39", "40-49", "50-59", "60-69", "above 69"), c(125, 135, 165, 150, 140, 145, 140))
+age = sample(age_try)
+table(age)
+```
+
+### (3) Household Income
+
+(https://www150.statcan.gc.ca/n1/daily-quotidien/200224/dq200224a-eng.htm)
+
+Also from Stats Canada, we can find out the mean of after-tax income is \$63500 and the standard deviation is \$12100. Thus, it is reasonable to generate the population(size=10000) under normal distribution and then apply simple random sampling without replacement(SRSWOR) to obtain samples(size = 1000). 
+
+```{r}
+set.seed(123)
+population = rnorm(10000, mean = 63500, sd = 12100)
+income_data = sample(population, size = 1000)
+# group data
+income = rep(0, 1000)
+for (i in c(1:1000))
+  if ( income_data[i] < 24999) {
+  income[i] = "0-$24,999"
+  } else if ( income_data[i] > 25000 & income_data[i] < 49999) {
+  income[i] = "$25,000-$49,999"
+  } else if ( income_data[i] > 50000 & income_data[i] < 74999) {
+  income[i] = "$50,000-$74,999"
+  } else if ( income_data[i] > 75000 & income_data[i] < 99999) {
+  income[i] = "$75,000-$99,999"
+  } else if ( income_data[i] > 100000 & income_data[i] < 149999) {
+  income[i] = "$100,000-$149,999"
+  } else {
+  income[i] = "above $150,000"
+  }
+table(income)
+```
+
+
+### (4) Education
+
+https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/hlt-fst/edu-sco/index-eng.cfm
+
+From Stats Canada, we can find out the percentages of each education group in Ontario. The percentages for education groups ("Less than HS", "High School", "College", "Bachelor", "Graduate") are (0.055, 0.155, 0.355, 0.330, 0.105). We then use Stratified Sampling by these weights to simulate the data and then randomize their orders. 
+
+```{r}
+set.seed(123)
+edu_try = rep(c("Less than HS", "High School", "College", "Bachelor", "Graduate"), c(55, 155, 355, 330, 105))
+edu = sample(edu_try)
+table(edu)
+```
+
+### (5) Occupation
+
+https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/prof/details/page.cfm?Lang=E&Geo1=PR&Code1=35&Geo2=PR&Code2=35&Data=Count&SearchText=&SearchType=Begins&SearchPR=01&B1=Labour
+
+From Stats Canada, we can find out the percentages of each occupation group in Ontario. The percentages for eoccupation groups ("Students", "Work for Company", "Self-employment", "Others") are (0.245, 0.325, 0.280, 0.150). We then use Stratified Sampling by these weights to simulate the data and then randomize their orders. 
+
+
+```{r}
+set.seed(123)
+occup_try = rep(c("Students", "Work for Company", "Self-employment", "Others"), c(245, 325, 280, 150))
+occup = sample(occup_try)
+table(occup)
+```
+
+### (6) COVID-19 is hazard?
+
+For this question, I will use the number 1 to represent "Refuse to answer", number 2,3,4,5 to represent "No", and number 6,7,8,9,10 to represent "Yes". These numbers seem like the ranks of the attitude to COVID-19 and somehow represent the true probability of the attitude. Thus, I generate 10000 numbers from 0 to 10 and then SRSWOR from the population to get the samples.
+
+
+```{r}
+set.seed(123)
+hazard_popu = rep(c(1:10), 1000)
+hazard_try = sample(hazard_popu, size = 1000)
+table(hazard_try)
+```
+
+
+```{r}
+# group data
+hazard = rep(0, 1000)
+for (i in c(1:1000))
+  if ( hazard_try[i] == 1) {
+  hazard[i] = "Refuse"
+  } else if ( hazard_try[i] > 1 & hazard_try[i] < 6) {
+  hazard[i] = "No"
+  } else {
+  hazard[i] = "Yes"
+  }
+table(hazard)
+```
+
+### (7) Restart
+
+For this question, I will use the number 1,2,3 to represent "No", number 4,5,6,7 to represent "Yes but only some parts", and number 8,9,10 to represent "Yes and everywhere". These numbers seem like the ranks of the attitude to COVID-19 and somehow represent the true probability of the attitude. Thus, I generate 10000 numbers from 0 to 10 and then SRSWOR from the population to get the samples.
+
+```{r}
+set.seed(123)
+restart_popu = rep(c(1:10), 1000)
+restart_try = sample(restart_popu, size = 1000)
+table(restart_try)
+```
+
+
+```{r}
+# group data
+restart = rep(0, 1000)
+for (i in c(1:1000))
+  if ( restart_try[i] < 4) {
+  restart[i] = "No"
+  } else if ( restart_try[i] > 3 & restart_try[i] < 8) {
+  restart[i] = "Yes but only some parts"
+  } else {
+  restart[i] = "Yes and everywhere"
+  }
+table(restart)
+```
+
+
+```{r}
+data <- data.frame("Gender" = gender, "Age" = age, "Income" = income, "Education" = edu, "Occupation" = occup, "Hazard" = hazard, "Restart" = restart)
+head(data)
+```
+
+# 2. Data Analysis
+
+
+```{r}
+table(gender, restart)
+table(restart, age)
+```
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(ggmap) # for theme_nothing
+# install.packages("ggmap")
+attach(mtcars)
+par(mfrow=c(1,3))
+df1 = data.frame(value = c(39, 47, 49, 39, 39, 43, 32),
+                 Group = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")) %>%
+   # factor levels need to be the opposite order of the cumulative sum of the values
+   mutate(Group = factor(Group, levels = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")),
+          cumulative = cumsum(value),
+          midpoint = cumulative - value / 2,
+          label = paste0(Group, " ", round(value / sum(value) * 100, 1), "%"))
+
+ggplot(df1, aes(x = 1, weight = value, fill = Group)) +
+   geom_bar(width = 1, position = "stack") +
+   coord_polar(theta = "y") +
+   geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
+   ggtitle("Restart Opinion (No) for Different Age Levels")
+   theme_nothing()     
+
+df2 = data.frame(value = c(51, 55, 61, 70, 50, 60, 53),
+                 Group = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")) %>%
+   # factor levels need to be the opposite order of the cumulative sum of the values
+   mutate(Group = factor(Group, levels = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")),
+          cumulative = cumsum(value),
+          midpoint = cumulative - value / 2,
+          label = paste0(Group, " ", round(value / sum(value) * 100, 1), "%"))
+
+ggplot(df2, aes(x = 1, weight = value, fill = Group)) +
+   geom_bar(width = 1, position = "stack") +
+   coord_polar(theta = "y") +
+   geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
+   ggtitle("Restart Opinion (Yes but only some parts) for Different Age Levels")
+   theme_nothing()     
+
+   
+df3 = data.frame(value = c(35, 33, 55, 41, 51, 42, 55),
+                 Group = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")) %>%
+   # factor levels need to be the opposite order of the cumulative sum of the values
+   mutate(Group = factor(Group, levels = c( "0-19", "20-29", "30-39", "40-49", "50-59", "60-69", "above 69")),
+          cumulative = cumsum(value),
+          midpoint = cumulative - value / 2,
+          label = paste0(Group, " ", round(value / sum(value) * 100, 1), "%"))
+
+ggplot(df3, aes(x = 1, weight = value, fill = Group)) +
+   geom_bar(width = 1, position = "stack") +
+   coord_polar(theta = "y") +
+   geom_text(aes(x = 1.3, y = midpoint, label = label)) + 
+   ggtitle("Restart Opinion (Yes and everywhere) for Different Age Levels")
+   theme_nothing()     
+
+```
+
+
+
+
+```{r}
+# Grouped bar plot
+ggplot(data, 
+       aes(x = restart, 
+           fill = income)) + 
+  geom_bar(position = "dodge") + 
+  xlab("Restart Opinions") +
+  ylab("Counts") +
+  ggtitle("Restart Opinions for Different Income Levels")
+
+ggplot(data, 
+       aes(x = restart, 
+           fill = edu)) + 
+  geom_bar(position = "dodge") + 
+  xlab("Restart Opinions") +
+  ylab("Counts") +
+  ggtitle("Restart Opinions for Different Education Levels")
+
+ggplot(data, 
+       aes(x = restart, 
+           fill = occup)) + 
+  geom_bar(position = "dodge") + 
+  xlab("Restart Opinions") +
+  ylab("Counts") +
+  ggtitle("Restart Opinions for Different Occupations")
+
+```
+

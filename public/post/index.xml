@@ -17,5 +17,26 @@
  Introduction Data Toronto Neighbourhoods Crime Rates data includes 2014-2019 Crime Data by Neighbourhood.</description>
     </item>
     
+    <item>
+      <title>Survey Report</title>
+      <link>/1/01/01/survey-report/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/1/01/01/survey-report/</guid>
+      <description>Summary COVID-19 has had a huge impact on all aspects of our lives. In this survey, we are going to find out the opinions of restarting Ontario for different groups of people in Ontario. The population is all residents in Ontario and we take 1000 samples. We are using stratified sampling method accoring to the percentages of each age group since homogeneous within each age group and heterogeneous between different age groups.</description>
+    </item>
+    
+    <item>
+      <title>Survey Simulation</title>
+      <link>/1/01/01/survey-simulation/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/1/01/01/survey-simulation/</guid>
+      <description>1. Simulate Data (1) Gender Give the percentages of Female, Male, Other and ‘Refuse to answer’ as (0.49, 0.49, 0.01, 0.01). Simluate 1000 respondents using this set of weights.
+(https://www.statista.com/statistics/446025/births-in-canada-by-gender/)
+gender = rep(c(&amp;quot;Female&amp;quot;, &amp;quot;Male&amp;quot;, &amp;quot;Other&amp;quot;, &amp;quot;Refuse to answer&amp;quot;), c(490, 490, 10, 10)) head(gender) ## [1] &amp;quot;Female&amp;quot; &amp;quot;Female&amp;quot; &amp;quot;Female&amp;quot; &amp;quot;Female&amp;quot; &amp;quot;Female&amp;quot; &amp;quot;Female&amp;quot;  (2) Age (https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000501)
+From Stats Canada, we can find out the percentages of each age group in Ontario.</description>
+    </item>
+    
   </channel>
 </rss>
