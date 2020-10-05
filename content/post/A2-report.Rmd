@@ -1,5 +1,5 @@
 ---
-title: "A survey on whether we should Restart the Ontario's economy"
+title: "A Survey on Whether Ontario's Economy Should be Restarted"
 author: "Luyao Liu, Qi Cai"
 date: 2020-10-04
 bibliography: A2.bib
