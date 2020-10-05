@@ -156,7 +156,7 @@ table(restart, age)
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 library(dplyr)
 library(ggplot2)
 library(ggmap) # for theme_nothing
@@ -209,7 +209,7 @@ ggplot(df3, aes(x = 1, weight = value, fill = Group)) +
 
 
 
-```{r}
+```{r, eval = FALSE}
 # Grouped bar plot
 ggplot(data, 
        aes(x = restart, 
