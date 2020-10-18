@@ -1,0 +1,573 @@
+---
+title: "Age, Children and Religions can Affect Marriage Status"
+author: "Luyao Liu"
+date: "10/16/2020"
+bibliography: A3.bib
+fontsize: 12pt
+link-citations: yes
+linkcolor: blue
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(tidyverse)
+library(magrittr)
+library(qqtest)
+library(car)
+library(lmtest)
+library(lme4)
+library(pROC)
+library(ggcorrplot)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+The quality of marriage largely affects people's happiness level and social stability. We analyze what factors can affect the quality of marriage and use models to predict the quality of marriage by applying the 2017 GSS data. Generalized linear model(GLM) [@nelder1972generalized], Generalized Linear Mixed Models (GLMMs) [@mcculloch2014generalized] and Backward Selection [@hocking1976biometrics] will be used to select variables and decide the finalized model. We find age, total number of children and religion of people can affect the outcome of marriage times(marriage status). Finally, we apply our best model to predict the marriage status using those variables selected before and the predicted efficiency is acceptable.
+
+
+# 1. Introduction
+
+Canada's General Social Survey (GSS) program consists of a series of independent, cross-sectional surveys, each covering one topic in-depth and recurring approximately every 5 years. GSS was established in 1985, the program's objectives are to gather data on social trends in order to monitor changes in the living conditions and well-being of Canadians, and to provide information on key social policy issues [@gss].
+
+The quality of married life largely determines the happiness level of residents, and it also has a very important impact on social security and social stability. We are interested in making analysis and prediction on the marriage status(use "number of marriages" to represent marriage status) and try to find the relationship between number of marriages and other variables based on 2017 GSS data. We apply statistical methods, like multiple regression, to find out the relationship, and split our data to training set and testing set to verify the efficiency of our model. Finally, the valid model can also be used to predict the marriage status of a person. We find that age, total number of children, education level, religion are important factors to decide or predict the marriage status of a adult.
+
+We will introduce the dataset firstly, and then explain the procedures of selecting variables and fitting model. After, results will be shown and discussion for weakness and future work will also be talked in the end. 
+
+# 2. Data
+
+The 2017 GSS data can be downloaded from Computing in the Humanities and Social Sciences (CHASS) at the University of Toronto. The population is the whole Canada residents and samples are those who are selected and willing to answer the questions. This website has various download formats, we can search by text, table number or time series number to find out relative dataset and browse by subject, survey number, table titles and labels or by Statistics Canada's keywords classification for tables. Here, we select all valid variables of 2017 GSS data and then refer the Rohan Alexander and Sam Caetano's work to clean the raw dataset.
+
+The 2017 GSS data includes 81 variables from 20602 observations, where 20 quantitative variables and 61 categorical variables are talking about the basic personal information, such as age, gender, living location, and the family status, financial status, marriage status and also health status. 
+
+As for this dataset, we can get some views about the questionnaire. This dataset contains a very wide coverage of variables, and we can almost infer the actual state of the respondent from the results of the variables. Also, these useful variables can be used to reflect the situation of our society and even make some meaningful predictions. However, there are some weaknesses as: 
+
+* There are many variables include more than 50% NA values, which may because those questions are sensitive to answer or difficult to recover for giving the real answer. Thus, the question design of the questionnaire may exist some problems. 
+
+* Some questions cover each other severely. The questions can be appropriately integrated to improve the efficiency and authenticity of the respondent's answering questions. 
+
+* The answers to some questions are not enough or not proper. For example, the choices for "Sex" only include "Female" and "Male", which may miss some other possible choices. 
+
+Thus, we don't take care of those variables that have more than 50% NA values. 
+
+
+# 3. Methodologis and Models
+
+## 3.1 Manipulate Data
+
+We regard "number marriage" as the response variable(our aim variable) and select some useful and relative variables as the covariates. Those covariates are age, "total number of children", "age at first birth", "sex", "region", "education", "partner education", etc. The reason why we select these covariates is they are related to children, education level, income level, happiness level, work intensity, and religious beliefs. These variables may determine people's attitudes toward family and marriage, and thus affect the quality of marriage.
+
+It is mentioned that the raw variable "number of marriage" has 5 levels in total, which are 0, 1, 2, 3, 4. Since we focus on the marriage status and quality so we only analyze those who have married. Hence, level 0 will be ignore. Then, we will split the left values to two new levels, which use "only once marriage" to represent a kind of good marriage and "more than once marriage" to represent some problems in their marriages. Finally, we transform those two levels to "1" and "0" as response variable. In addition, for the variable "education" and "partner education", they have 7 levels. So we integrate these 7 levels to two levels which are "Bachelor's and above" and "Below Bachelor's". 
+
+
+## 3.2 Constructing Regression Model
+
+### Model1: GLM with Binomial Response
+
+When the response variable has only two outcomes, the common linear regression is not a proper choice. So we can use a binomial distribution $\operatorname{Bin}\left(m_{i}, \pi_{i}\right)$ to express our response variable:
+
+$$
+\mathrm{P}\left(Y_{i}=y_{i}\right)=\left(\begin{array}{c}
+m_{i} \\
+y_{i}
+\end{array}\right) \pi_{i}^{y_{i}}\left(1-\pi_{i}\right)^{m_{i}-y_{i}}
+$$
+
+We further assume that the $Y_{i}$ are independent, which means the response values are not influenced by other response values. The individual trials that compose $Y_{i}$ are subject to the same $q$ predictors $\left(x_{i 1}, \ldots, x_{i q}\right)$
+
+As in the binary case, we construct a linear predictor
+
+$$
+\eta_{i}=\beta_{0}+\beta_{1} x_{i 1}+\cdots+\beta_{q} x_{i q}
+$$
+
+We can use a logistic link function $\eta_{i}=\log \left(\pi_{i} /\left(1-\pi_{i}\right)\right)$ to express the odds ratio. In other words, what we have here is simply a linear regression model, but instead of predicting the "target", we are predicting the logarithm of its odds (i.e. $\left.\frac{\log (P(Y=1))}{\log (P(Y=0))}\right)$, so everything regarding coefficients is the same as in linear regression, but keeping that transformation in mind.
+
+### Model2: Generalized Linear Mixed Models (GLMMs)
+
+After considering random effects, we can use generalized linear mixed models. The response follows an exponential family distribution, 
+
+$$
+f\left(y_{i} \mid \theta_{i}, \phi\right)=\exp \left\{\frac{y_{i} \theta_{i}-b\left(\theta_{i}\right)}{a(\phi)}+c(y, \phi)\right\}
+$$
+Let $\mathbb{E}\left(Y_{i}\right)=\mu_{i}$ and we connect it to the linear predictor $\eta_{i}$ using the link function $g$ by $\eta_{i}=g\left(\mu_{i}\right).$ If the random effect $\gamma$ have distribution $h(\gamma \mid V)$ for parameters $V$. The fixed effects are $\beta .$ Condition on the random effects $\gamma,$ we have $\theta_{i}=x_{i}^{\top}+$ $z_{i}^{\top} \gamma .$ 
+
+## 3.3 Variable Selection
+
+Some variables in original model are redundant or there exist Multicollinearity. So we develop some variable selection method:
+
+### (a) AIC and BIC Criterion:
+
+AIC [@sakamoto1986akaike] and BIC [@schwarz1978estimating] are Information criteria methods used to assess model fit while penalizing the number of estimated parameters. The smaller the AIC or BIC, the model is better regarding this criteria. Let $k$ be the number of estimated parameters in the model. Let $L$ be the maximum value of the likelihood function for the model. Then the AIC value of the model is the following. The smaller the AIC or BIC, the model is better regarding this criteria. 
+
+$$
+\mathrm{AIC}=2 k-2 \ln (L)
+$$
+
+The formula for (BIC) is similar to the formula for AIC, but with a different penalty for the number of parameters.
+
+$$
+\mathrm{BIC}=\ln (n) k-2 \ln (\mathrm{L})
+$$
+
+### (b) Stepwise selection:
+
+Stepwise regression is a method of fitting regression models in which the choice of predictive variables is carried out by an automatic procedure. 
+
+Forward selection: Forward selection is a type of stepwise regression which begins with an empty model and adds in variables one by one. 
+
+Backward selection: The backward selection model starts with all candidate variables in the model. At each step, the variable that is the least significant is removed. We applied backward selection model here to do the variables selection.
+
+
+## 3.4 Model Validation/ Dignostics
+
+After selecting variables and model, we need to check the following assumptions:
+
+(a) Normality of residuals; (QQ-plot)
+
+(b) Homoscedasticity; (Fitted Values v.s. Residuals)
+
+(c) Independence (Ljung-Box test [@ljung1978measure])
+
+## 3.5 Software
+
+We will use `R` to run our model.
+
+# 4. Results
+
+## 4.1 Process of Obtaining Final Model
+
++ *Split the data to train set and test set:* After finding out the final model, we want to try the model to predict the marriage status. Thus, we randomly split the dataset to training set and test set according to their "caseid". Specifically speaking, we randomly select 25% as test set (totally 1292 from 5169 observations) and the rest 75% are set as train set. (3877 from 5169 observations) We will firstly use train set to select variables and proper models and then apply the finalized model on test set to find out the predicting accuracy.
+
++ *Fitting GLM with Binomial Response:* since the response variable "number_marriage" is a binary variable, we can let $Y_{i} \sim$ Bernoulli $\left(\pi_{i}\right),$ where $\pi_{i}$ is the probability of readmission. And then we fit a GLM as $\operatorname{logit}\left(\pi_{i}\right)=$ $X_{i} \beta+e_{i},$ where $X_{i}$ are covariates vector and $e_{i} \sim N\left(0, \sigma^{2}\right)$. The fitted formula for model 1 is:
+  
+  \[
+  \begin{array}{lcl}  
+  \text{number marriages} &=& \text{age} + \text{total children} + \text{age at first birth} + 
+    \\&&\\
+    && \text{feelings life} + \text{sex} + \text{region} + \text{education} + 
+    \\&&\\
+    && \text{partner education} + \text{average hours worked} + 
+    \\&&\\
+    && \text{self rated health} + \text{religion importance} + \text{income family} +
+    \\&&\\    
+    && \text{children in household} + \text{has grandchildren}
+  \end{array} 
+  \]
+  
++ *Generalized Linear Mixed Model:* After fitting GLM model, we find most of the variables that are not significant. Since different respondent may have different number of children, the generalized linear mixed model condition on "total_children" maybe another choice. We can let $Y_{i j} \mid U_{i} \sim$ Bernoulli $\left(\pi_{i t}\right)$ where $\pi_{i t}$ is the probability of have only once marriage. And then we fit a GLMM as logit $\left(\pi_{i t}\right)=X_{i t} \beta+U_{i}$. The fitted formula for model 2 is:
+
+  \[\text{number marriages} = (1|\text{total children}) + \text{...}\]
+  
+  where `...` represents all the rest covariates shown in model 1. 
+
++ *Backward Stepwise Selection:* From the regression results above, we still find most of the covariates are not significant. This may be caused by the multicollinearity. And the correlation matrix graph (numerical variables) is shown as:
+
+    ```{r, fig.align = "center", echo = FALSE, warning=FALSE, message=FALSE}
+    df = read.csv("gss.csv")
+    
+    # select some focused and useful variables (relative and have small NA's, totally 14 variables)
+    data <- df %>% 
+      dplyr::select(caseid, age, total_children, age_at_first_birth, feelings_life, sex, 
+                    region, education, partner_education, average_hours_worked,
+                    self_rated_health, regilion_importance, income_family,
+                    children_in_household, has_grandchildren, number_marriages) %>% 
+      na.omit()
+    n = nrow(data) 
+    # delete those who haven't had marriage
+    data <- data[-which(data$number_marriages == 0), ]
+    # split Education to 2 levels
+    data %<>%
+      mutate(
+        education = case_when(
+          education %in% c("Bachelor's degree (e.g. B.A., B.Sc., LL.B.)", "University certificate, diploma or degree above the bach...") ~ "Bachelor's or Above",
+          education %in% c("College, CEGEP or other non-university certificate or di...", "High school diploma or a high school equivalency certificate", "Less than high school diploma or its equivalent", "Trade certificate or diploma", "University certificate or diploma below the bachelor's level") ~ "Below Bachelor's",
+        ),
+        partner_education = case_when(
+          partner_education %in% c("Bachelor's degree (e.g. B.A., B.Sc., LL.B.)", "University certificate, diploma or degree above the ba...") ~ "Bachelor's or Above",
+          partner_education %in% c("College, CEGEP or other non-university certificate or d...", "High school diploma or a high school equivalency certi...", "Less than high school diploma or its equivalent", "Trade certificate or diploma", "University certificate or diploma below the bachelor's level") ~ "Below Bachelor's",
+        ),
+        number_marriages = case_when(
+          number_marriages < 2 ~ 1,
+          number_marriages >= 2 ~ 0,
+        )
+      )
+    
+    # split data to test set and train set
+    set.seed(12345)
+    id = data$caseid
+    size = length(id) #(total 5169)
+    # 25% test set(total 1292) and 75% train set(total 3877)
+    sample_size = size*0.25
+    test_id = sample(id, size = sample_size)
+    train_id = setdiff(id, test_id)
+    # df_new = data.frame(df)
+    test_set = data[data$caseid %in% test_id, ] # total 1292
+    train_set = data[data$caseid %in% train_id, ] # total 3877
+    
+    # originl model1
+    formula = number_marriages ~ age + total_children + age_at_first_birth + feelings_life + sex + 
+      region + education + partner_education + average_hours_worked + self_rated_health + 
+      regilion_importance + income_family + children_in_household + has_grandchildren
+    
+    model = glm(formula, data = train_set, family = binomial)
+    
+    # summary(model)
+    
+    part_data <- data %>% 
+      dplyr::select(-c(education, partner_education))
+    # part_data
+    DF <- data.frame(part_data)
+    DF[] <- lapply(DF,as.integer)
+    # cor(DF)
+    # visualize it
+    # install.packages("corrplot")
+    ggcorrplot(cor(DF), type = "upper") + 
+      labs(caption = "Figure 1")
+    ```
+
+  From the correlation plot (Figure 1) above, we can find some variables have high correlations, such as "age" and "total children", "total children" and "age at first birth". This may cause redundant variables and multicollinearity. So we decide to use backward stepwise selection method to find more proper and simpler model but with reasonable explanation. Thus, the final result is:
+
+  \[
+  \begin{array}{lcl}  
+  \text{number marriages} &=& \text{age} + \text{total children} + \text{education} + 
+    \\&&\\
+    && \text{religion importance} + \text{children in household}
+  \end{array} 
+  \]
+
+
+## 4.2 Results of Model Validation
+
+### 4.2.1 Normality of residuals
+
+```{r, fig.align = "center", out.width = "70%", echo = FALSE}
+# use variables selected from Backward to do glm
+model3 = glm(number_marriages ~ age + total_children + education + regilion_importance + 
+               children_in_household, data = data, family = binomial)
+# Diagnostics
+# 1. QQ-plot
+residual = residuals(model3, "pearson", scaled = TRUE) 
+tibble(residuals = residual) %>% ggplot(aes(sample = residuals)) + stat_qq() + stat_qq_line() + 
+  labs(caption = "Figure 2")
+```
+
+
+In statistics, a QQ (quantile-quantile) plot is a probability plot, which is a graphical method for comparing two probability distributions by plotting their quantiles against each other. From the QQ plot above(Figure 2), we can find although most of the points are on the straight line, there still large part of points are below the straight line, which means the residuals doesn't fit normal distribution very well.
+
+### 4.2.2 Homoscedasticity
+
+```{r, fig.align = "center", out.width = "70%", echo = FALSE}
+# 2. fitted v.s. residuals
+diagd = tibble(resid = residuals(model3), fitted = fitted(model3))
+diagd %>% ggplot(aes(x=fitted,y=resid)) + 
+  geom_point(alpha=0.3) + 
+  geom_hline(yintercept=0) + 
+  labs(x="Fitted", y="Residuals",
+       caption = "Figure 3")
+```
+
+From the figure above (Figure 3), we can find though the points have some trends, they are on the two sides around zero. Thus, it is not very confident to state the variance is constant, which also means there may not exist homoscedasticity.
+
+### 4.2.3 Independence
+
+From the R output, we can find the p-value of Ljung-Box test is 0.2891, which means we have no enough evidence to reject null hypothesis and then all of the variables are independent. 
+
+## 4.3 Prediction on Test Set
+
+After fitting this models on train set, we use the best finalized model on test set. Here, we use AUC - ROC curve to represent the accuracy of prediction by our model, where AUC - ROC curve is a performance measurement for classification problem at various thresholds settings. ROC is a probability curve and AUC represents degree or measure of separability. It tells how much model is capable of distinguishing between classes. Higher the AUC, better the model is at predicting 0s as 0s and 1s as 1s. The AUC for our model is 0.7319 and the ROC curve is as below(Figure 4). From the accuracy, we can find the predicted results are acceptable but not perfect. Thus, the model maybe a suitable model for the data.
+
+```{r, fig.align = "center", out.width = "70%", echo = FALSE}
+# predict Accuracy for test set
+final_formula = number_marriages ~ age + total_children + education + regilion_importance + 
+    children_in_household
+
+model3_test = glm(final_formula, data = test_set, family = binomial)
+
+# Prediction for test set
+library(pROC)
+# Produce the ROC curve. State the AUC value and interpret.
+pred_test = predict(model3_test, type = "response") 
+roc_para_test = roc(test_set$number_marriages ~ pred_test) 
+TPR_test = roc_para_test$sensitivities
+FPR_test = 1 - roc_para_test$specificities 
+# plot
+data.frame(
+  FPR = FPR_test, 
+  TPR = TPR_test
+) %>%
+  ggplot(mapping = aes(x = FPR, y = TPR)) + 
+  geom_path(colour = "red") + 
+  geom_abline(slope = 1, intercept = 0, 
+              colour = "blue", lty = 2) + 
+  geom_text(data.frame(x = 0.7, y = 0.4, 
+                       label = paste0("AUC = ", round(auc(roc_para_test),2))),
+            mapping = aes(x = x, y = y, label = label)) + 
+  labs(caption = "Figure 4")
+# auc(roc_para_test)
+```
+
+# 5. Discussion
+
+## 5.1 Final Model Interpretation and Importance
+
+### 5.1.1 Final model:
+
+At the beginning, we use the GLM model with Binomial Response applying all covariates(total 13 variables) and only 5 variables are statistically significant, which means there are only 5 variables can cause the difference of the response output. In other words, it means only 5 variables have effects on the output of response variable. Thus, it is not a good model. After that, we continue to try Generalized Linear Mixed Model(GLMM) conditioning on the "total children". However, the result is still bad since there are 6 variables are significant. We plot the correlation matrix of these variables and find some variables have high correlation, so we decide to use Backward Stepwise to decide the final model.
+
+The final result is:
+
+\[
+  \begin{array}{lcl}  
+  \text{number marriages} &=& \text{age} + \text{total children} + \text{education} + 
+    \\&&\\
+    && \text{religion importance} + \text{children in household}
+  \end{array} 
+\]
+
+```{r, echo=FALSE}
+# use variables selected from Backward to do glm
+model3 = glm(number_marriages ~ age + total_children + education + regilion_importance + 
+    children_in_household, data = train_set, family = binomial)
+
+knitr::kable(summary(model3)$coefficients, digits = 2)
+```
+
+From the output above, we can know age, the total number of children, the relationship and the number of children in household can cause significant effect on the marriage status or marriage quality. Since the estimate value means the log-odds ratio of the outcome 1 and outcome 0, we can know the coefficients that are associated to a variable give us how much that log odds goes up every time the corresponding variable goes up by 1 unit. The coefficient of age is negative means the higher age can leads to more marriages(once marriage is 1 and more than once marriage is 0 of response variable). More children means more financial burden on this family, which may also cause the bad quality of marriage and so that more marriages. The higher education level means they have better education so that they are more responsible for the family, thus more likely to have only once marriage. These results are a good reflection of social phenomena, whether it is a small society or a large world.
+
+
+### 5.1.2. Model Prediction:
+
+After deciding the final model, we use the test set to predict the marriage of an observation when we know his/her basic situation of age, children, religion. We compare the predicted results and real results, the predicted accuracy is 0.7319, which means the efficiency of our model is acceptable. 
+
+
+## 5.2 Limitations and Future Work
+
+* There are some weaknesses about stepwise selection method, for example:
+
+  (a) It yields R-squared values that are badly biased to be high.
+
+  (b) It yields p-values that do not have the proper meaning, and the proper correction
+for them is a difficult problem.
+
+  (c) The stepwise selection allows us to think too much about statistical model but not
+the original problem.
+
+  In addition, we didn't consider the interaction terms which may have better results. Also, it is only a multiple linear model. The fitted efficiency may be more accurate if we add non-linearity elements in our model.
+
+* Original Variable Selection
+
+  (a) The original variables are selected by our subjective willing, so this may cause incompleteness and bias on the following analysis. We may include more variables to make analysis in the future. And it may also help increase the AUC of prediction.
+
+  (b) This 2017 GSS dataset not only includes the information we found above, there are still many variables we haven't touched and they may help us find out more interesting information about the society. 
+
+# Appendix
+
+### Codes for Models and Plots 
+
+```{r, eval = FALSE}
+# process the data again
+df = read.csv("gss.csv")
+# summary(df)
+# dim(df)
+# str(df)
+```
+
+
+```{r, eval = FALSE}
+# select some focused and useful variables 
+# (relative and have small NA's, totally 14 variables)
+data <- df %>% 
+  dplyr::select(caseid, age, total_children, age_at_first_birth, 
+                feelings_life, sex, 
+                region, education, partner_education, 
+                average_hours_worked,
+                self_rated_health, regilion_importance, 
+                income_family,
+                children_in_household, has_grandchildren, 
+                number_marriages) %>% 
+  na.omit()
+n = nrow(data) 
+# delete those who haven't had marriage
+data <- data[-which(data$number_marriages == 0), ]
+# split Education to 2 levels
+data %<>%
+  mutate(
+    education = case_when(
+      education %in% 
+        c("Bachelor's degree (e.g. B.A., B.Sc., LL.B.)", 
+          "University certificate, diploma or degree above the bach...") ~
+        "Bachelor's or Above",
+      
+      education %in% 
+        c("College, CEGEP or other non-university certificate or di...", 
+          "High school diploma or a high school equivalency certificate", 
+          "Less than high school diploma or its equivalent", 
+          "Trade certificate or diploma", 
+          "University certificate or diploma below the bachelor's level") ~ 
+        "Below Bachelor's",
+    ),
+    partner_education = case_when(
+      partner_education %in% 
+        c("Bachelor's degree (e.g. B.A., B.Sc., LL.B.)",
+          "University certificate, diploma or degree above the ba...") ~ 
+        "Bachelor's or Above",
+      partner_education %in% 
+        c("College, CEGEP or other non-university certificate or d...", 
+          "High school diploma or a high school equivalency certi...", 
+          "Less than high school diploma or its equivalent", 
+          "Trade certificate or diploma", 
+          "University certificate or diploma below the bachelor's level") ~ 
+        "Below Bachelor's",
+    ),
+    number_marriages = case_when(
+      number_marriages < 2 ~ 1,
+      number_marriages >= 2 ~ 0,
+    )
+  )
+# head(data)
+# str(data)
+
+```
+
+```{r, eval = FALSE}
+# split data to test set and train set
+set.seed(12345)
+id = data$caseid
+size = length(id) #(total 5169)
+# 25% test set(total 1292) and 75% train set(total 3877)
+sample_size = size*0.25
+test_id = sample(id, size = sample_size)
+train_id = setdiff(id, test_id)
+# df_new = data.frame(df)
+test_set = data[data$caseid %in% test_id, ] # total 1292
+train_set = data[data$caseid %in% train_id, ] # total 3877
+```
+
+```{r, eval = FALSE}
+# originl model1
+formula = number_marriages ~ age + total_children + 
+  age_at_first_birth + feelings_life + sex + 
+  region + education + partner_education + 
+  average_hours_worked + self_rated_health + 
+  regilion_importance + income_family + 
+  children_in_household + has_grandchildren
+
+model = glm(formula, data = train_set, 
+            family = binomial)
+
+summary(model)
+```
+
+
+```{r, eval = FALSE}
+# model2: 
+new_formula = number_marriages ~ (1 | total_children) +age + 
+  sex + age_at_first_birth + feelings_life + 
+  region + education + partner_education + 
+  average_hours_worked + self_rated_health + 
+  regilion_importance + income_family + 
+  children_in_household + has_grandchildren
+
+model2 = glmer(new_formula, data = train_set, 
+               family = binomial, nAGQ = 0)
+
+summary(model2)
+```
+
+```{r, eval = FALSE}
+part_data <- data %>% 
+  dplyr::select(-c(education, partner_education))
+part_data
+DF <- data.frame(part_data)
+DF[] <- lapply(DF,as.integer)
+# cor(DF)
+# visualize it
+# install.packages("corrplot")
+library(corrplot)
+corrplot(cor(DF))
+```
+
+```{r, eval = FALSE}
+# Backward Select Variables for model
+backward = step(model, direction = "backward")
+```
+
+
+```{r, eval = FALSE}
+# use variables selected from Backward to do glm
+model3 = glm(number_marriages ~ age + total_children + 
+               education + regilion_importance + 
+    children_in_household, data = train_set, 
+    family = binomial)
+
+summary(model3)
+```
+
+
+```{r, eval = FALSE}
+# Diagnostics
+# 1. QQ-plot
+residual = residuals(model3, "pearson", scaled = TRUE) 
+tibble(residuals = residual) %>% 
+  ggplot(aes(sample = residuals)) + 
+  stat_qq() + stat_qq_line() 
+
+# 2. fitted v.s. residuals
+diagd = tibble(resid = residuals(model3), 
+               fitted = fitted(model3))
+plot2 = diagd %>% ggplot(aes(x=fitted,y=resid)) + 
+  geom_point(alpha=0.3) + 
+  geom_hline(yintercept=0) + 
+  labs(x="Fitted", y="Residuals")
+plot2
+
+# 3. independence
+Box.test(residual)
+
+```
+
+```{r, eval = FALSE}
+# predict Accuracy for test set
+final_formula = number_marriages ~ age + total_children + 
+  education + regilion_importance + 
+    children_in_household
+
+model3_test = glm(final_formula, data = test_set, 
+                  family = binomial)
+
+summary(model3_test)
+
+```
+
+
+
+```{r, eval = FALSE}
+# Prediction for test set
+library(pROC)
+# Produce the ROC curve. State the AUC value and interpret.
+pred_test = predict(model3_test, type = "response") 
+roc_para_test = roc(test_set$number_marriages ~ pred_test) 
+TPR_test = roc_para_test$sensitivities
+FPR_test = 1 - roc_para_test$specificities 
+# plot
+data.frame(
+  FPR = FPR_test, 
+  TPR = TPR_test
+) %>%
+  ggplot(mapping = aes(x = FPR, y = TPR)) + 
+  geom_path(colour = "red") + 
+  geom_abline(slope = 1, intercept = 0, 
+              colour = "blue", lty = 2) + 
+  geom_text(data.frame(x = 0.7, y = 0.4, 
+                       label = paste0("AUC = ", 
+                                      round(auc(roc_para_test),2))),
+            mapping = aes(x = x, y = y, label = label)) + 
+  labs(caption = "Figure 4")
+```
+
+# References

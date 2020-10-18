@@ -48,5 +48,14 @@ From Stats Canada, we can find out the percentages of each age group in Ontario.
       <description>This is Liulu Yao. An undergraduate student in UT.</description>
     </item>
     
+    <item>
+      <title>Age, Children and Religions can Affect Marriage Status</title>
+      <link>/1/01/01/age-children-and-religions-can-affect-marriage-status/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/1/01/01/age-children-and-religions-can-affect-marriage-status/</guid>
+      <description>Abstract The quality of marriage largely affects people’s happiness level and social stability. We analyze what factors can affect the quality of marriage and use models to predict the quality of marriage by applying the 2017 GSS data. Generalized linear model(GLM) (Nelder and Wedderburn 1972), Generalized Linear Mixed Models (GLMMs) (McCulloch and Neuhaus 2014) and Backward Selection (Hocking 1976) will be used to select variables and decide the finalized model.</description>
+    </item>
+    
   </channel>
 </rss>
