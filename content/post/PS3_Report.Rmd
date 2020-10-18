@@ -367,6 +367,12 @@ the original problem.
 
 # Appendix
 
+### Github
+
+* Github repo: https://github.com/liuluyao54/STA304
+
+* Website: https://reverent-shirley-d30197.netlify.app/
+
 ### Codes for Models and Plots 
 
 ```{r, eval = FALSE}
